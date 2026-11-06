@@ -21,6 +21,12 @@ Fetching is cached in `cache/`, so re-running resumes where it stopped. Use
 `--refresh` after upgrading the script to re-process cached matches.
 `--teams "France,Ireland"` changes the teams; `--both` requires both sides to match.
 
+## Publish the dashboard (GitHub Pages)
+
+Run `publish.bat` (Windows). It rebuilds `index.html` from `rugby.db`, commits and
+pushes it. In the repo's Settings > Pages, set the source to branch `main`, folder
+`/ (root)`; the site is then at https://kprinsloo-sports.github.io/rugby_player_minutes/
+
 ## Dashboard
 
 `dashboard.html` is a single self-contained file: full table, filters for team,
