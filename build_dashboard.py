@@ -16,6 +16,29 @@ import sqlite3
 import sys
 from pathlib import Path
 
+# A match counts as an international when BOTH sides are national men's teams.
+# Club and invitational sides (Stormers, Barbarians, ...) are not in this list.
+# Add missing nations on the command line: --national "Name 1,Name 2"
+NATIONAL_TEAMS = {
+    "Argentina", "Australia", "England", "Fiji", "France", "Ireland", "Italy",
+    "Japan", "New Zealand", "Samoa", "Scotland", "South Africa", "Tonga", "Wales",
+    "Georgia", "Romania", "Spain", "Portugal", "Uruguay", "Chile", "Canada", "USA",
+    "United States", "Namibia", "Zimbabwe", "Kenya", "Uganda", "Russia", "Belgium",
+    "Netherlands", "Germany", "Poland", "Hong Kong China", "Hong Kong", "Korea",
+    "South Korea", "Brazil", "Paraguay", "Colombia", "Switzerland", "Sweden",
+    "Lithuania", "Czechia", "Czech Republic", "Ivory Coast", "Cote d'Ivoire",
+    "Madagascar", "Senegal", "Morocco", "Tunisia", "Algeria", "Cameroon", "Ghana",
+    "Nigeria", "Zambia", "Malta", "Croatia", "Ukraine", "Latvia", "Sri Lanka",
+    "Philippines", "Malaysia", "Singapore", "Kazakhstan", "China", "India",
+    "Papua New Guinea", "Cook Islands", "Peru", "Venezuela", "Mexico", "Jamaica",
+    "Trinidad and Tobago", "Barbados",
+}
+
+
+def is_international(team_a, team_b, national):
+    return team_a in national and team_b in national
+
+
 QUERY = """
 SELECT a.match_id, m.match_date, m.team_a, m.team_b, m.competition,
        COALESCE(m.match_secs_estimated, 0),
@@ -28,7 +51,7 @@ ORDER BY m.match_date DESC, a.match_id, a.team, a.shirt_number
 """
 
 
-def load_rows(db_path):
+def load_rows(db_path, national=NATIONAL_TEAMS):
     conn = sqlite3.connect(db_path)
     cols = {r[1] for r in conn.execute("PRAGMA table_info(appearances)")}
     if not cols:
@@ -41,6 +64,7 @@ def load_rows(db_path):
          src, started, on, off, mins, yc, rc) in conn.execute(QUERY):
         out.append({
             "id": mid, "d": date, "ma": f"{ta} v {tb}", "c": comp, "est": est,
+            "i": 1 if is_international(ta, tb, national) else 0,
             "t": team, "k": key, "p": name, "sh": shirt, "pos": pos, "n": slot,
             "g": group, "src": src, "st": started, "on": on, "off": off,
             "m": mins or 0, "yc": yc or 0, "rc": rc or 0,
@@ -48,8 +72,9 @@ def load_rows(db_path):
     return out
 
 
-def build(db_path, out_path):
-    rows = load_rows(db_path)
+def build(db_path, out_path, extra_national=()):
+    national = set(NATIONAL_TEAMS) | {t.strip() for t in extra_national if t.strip()}
+    rows = load_rows(db_path, national)
     meta = {
         "generated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
         "db": Path(db_path).name,
@@ -61,14 +86,24 @@ def build(db_path, out_path):
     Path(out_path).write_text(html, encoding="utf-8")
     matches = len({r["id"] for r in rows})
     print(f"Wrote {out_path}: {len(rows)} appearances from {matches} matches")
+    other = sorted({(r["d"], r["ma"]) for r in rows if not r["i"]})
+    if other:
+        print(f"{len(other)} match(es) are NOT counted as internationals (a side is not "
+              "in the national-team list):")
+        for d, ma in other:
+            print(f"  {d}  {ma}")
+        print("If one of these is really a national side, re-run with "
+              '--national "Team Name".')
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--db", default="rugby.db")
     ap.add_argument("--out", default="dashboard.html")
+    ap.add_argument("--national", default="",
+                    help="extra national-team names, comma separated")
     args = ap.parse_args()
-    build(args.db, args.out)
+    build(args.db, args.out, args.national.split(","))
 
 
 TEMPLATE = r"""<!doctype html>
@@ -164,6 +199,12 @@ tbody tr:hover { background: var(--hover); }
 
   <section class="panel" aria-label="Filters">
     <div class="filters">
+      <div class="field"><label for="f-type">Matches</label>
+        <select id="f-type">
+          <option value="intl">Internationals only</option>
+          <option value="all">All matches</option>
+          <option value="other">Non-internationals only</option>
+        </select></div>
       <div class="field"><label for="f-team">Team</label>
         <select id="f-team"></select></div>
       <div class="field"><label for="f-group">Position group</label>
@@ -216,7 +257,7 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g,
 const num1 = n => (Math.round(n * 10) / 10).toLocaleString(undefined, {maximumFractionDigits: 1});
 const int = n => Math.round(n).toLocaleString();
 
-const state = {team: "", group: "", pos: "", q: "", view: "apps", playedOnly: true,
+const state = {type: "intl", team: "", group: "", pos: "", q: "", view: "apps", playedOnly: true,
   hideUncertain: false, sortKey: "d", sortDir: "desc", page: 0, size: 100};
 
 const COLS = {
@@ -251,7 +292,8 @@ function positionOptions() {
 }
 
 function setupFilters() {
-  const teams = [...new Set(DATA.map(r => r.t))].sort();
+  const inType = r => state.type === "all" || (state.type === "intl") === !!r.i;
+  const teams = [...new Set(DATA.filter(inType).map(r => r.t))].sort();
   fillSelect($("f-team"), teams, "All teams", state.team);
   const present = new Set(DATA.map(r => r.g).filter(Boolean));
   fillSelect($("f-group"), GROUPS.filter(g => present.has(g)), "All groups", state.group);
@@ -261,6 +303,7 @@ function setupFilters() {
 function filtered() {
   const q = state.q.trim().toLowerCase();
   return DATA.filter(r =>
+    (state.type === "all" || (state.type === "intl") === !!r.i) &&
     (!state.team || r.t === state.team) &&
     (!state.group || r.g === state.group) &&
     (!state.pos || r.pos === state.pos) &&
@@ -383,6 +426,11 @@ function setView(view) {
 }
 
 function wire() {
+  $("f-type").onchange = e => {
+    state.type = e.target.value; state.page = 0; setupFilters();
+    state.team = $("f-team").value; state.group = $("f-group").value;
+    state.pos = $("f-pos").value; render();
+  };
   $("f-team").onchange = e => { state.team = e.target.value; state.page = 0; render(); };
   $("f-group").onchange = e => {
     state.group = e.target.value;
@@ -400,8 +448,8 @@ function wire() {
   $("prev").onclick = () => { state.page--; render(); };
   $("next").onclick = () => { state.page++; render(); };
   $("reset").onclick = () => {
-    Object.assign(state, {team: "", group: "", pos: "", q: "", playedOnly: true, hideUncertain: false});
-    $("f-q").value = ""; $("f-played").checked = true; $("f-uncertain").checked = false;
+    Object.assign(state, {type: "intl", team: "", group: "", pos: "", q: "", playedOnly: true, hideUncertain: false});
+    $("f-type").value = "intl"; $("f-q").value = ""; $("f-played").checked = true; $("f-uncertain").checked = false;
     setupFilters(); setView(state.view);
   };
   $("tbl").tHead.onclick = e => {
