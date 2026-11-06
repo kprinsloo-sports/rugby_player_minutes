@@ -86,6 +86,14 @@ def build(db_path, out_path, extra_national=()):
     Path(out_path).write_text(html, encoding="utf-8")
     matches = len({r["id"] for r in rows})
     print(f"Wrote {out_path}: {len(rows)} appearances from {matches} matches")
+    stale = [r for r in rows if r["pos"] == "Replacement" or
+             (r["src"] is None and r["m"] > 0)]
+    if stale:
+        n = len({r["id"] for r in stale})
+        print(f"WARNING: {len(stale)} appearances in {n} matches have no proper position "
+              "(still 'Replacement' or never processed). Run\n"
+              "  python rugby_minutes.py --start YYYY-MM-DD --end YYYY-MM-DD --refresh\n"
+              "with the latest rugby_minutes.py, then build the dashboard again.")
     other = sorted({(r["d"], r["ma"]) for r in rows if not r["i"]})
     if other:
         print(f"{len(other)} match(es) are NOT counted as internationals (a side is not "
