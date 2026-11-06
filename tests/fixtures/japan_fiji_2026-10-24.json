@@ -1,0 +1,962 @@
+{
+ "summary": {
+  "match": {
+   "matchId": "844c5e36-be81-45e8-bbc0-305cb8b71fbc",
+   "time": {
+    "label": "2026-10-24"
+   },
+   "competition": "Men's Internationals 2026",
+   "sport": "mru",
+   "status": "C",
+   "scores": [
+    28,
+    34
+   ],
+   "clock": {
+    "secs": 4812,
+    "label": "80:12"
+   },
+   "teams": [
+    {
+     "id": "49",
+     "name": "Japan"
+    },
+    {
+     "id": "46",
+     "name": "Fiji"
+    }
+   ],
+   "venue": {
+    "name": "Prince Chichibu Memorial Stadium",
+    "city": "Tokyo"
+   }
+  },
+  "teams": [
+   {
+    "teamList": {
+     "list": [
+      {
+       "number": "1",
+       "order": 1,
+       "positionLabel": "Prop",
+       "player": {
+        "id": "65984",
+        "altId": "40709280-e7c4-4431-96f5-3e44cfa1de24",
+        "isReplacement": false,
+        "name": {
+         "display": "Yota Kamimori"
+        }
+       }
+      },
+      {
+       "number": "2",
+       "order": 4,
+       "positionLabel": "Hooker",
+       "player": {
+        "id": "65987",
+        "altId": "80dc166a-9801-494a-881c-8e4e251cff0d",
+        "isReplacement": false,
+        "name": {
+         "display": "Mamoru Harada"
+        }
+       }
+      },
+      {
+       "number": "3",
+       "order": 5,
+       "positionLabel": "Prop",
+       "player": {
+        "id": "c3da7032-6655-43e1-9cdc-1ce020c75f0d",
+        "altId": "c3da7032-6655-43e1-9cdc-1ce020c75f0d",
+        "isReplacement": false,
+        "name": {
+         "display": "Keijiro Tamefusa"
+        }
+       }
+      },
+      {
+       "number": "4",
+       "order": 6,
+       "positionLabel": "Lock",
+       "player": {
+        "id": "71565",
+        "altId": "bd34035b-d710-4d56-bb7e-a6d55cdfcb91",
+        "isReplacement": false,
+        "name": {
+         "display": "Jack Cornelsen"
+        }
+       }
+      },
+      {
+       "number": "5",
+       "order": 8,
+       "positionLabel": "Lock",
+       "player": {
+        "id": "72580",
+        "altId": "6020bf5f-76a5-4a2f-a4a5-ce633ded49a2",
+        "isReplacement": false,
+        "name": {
+         "display": "Warner Dearns"
+        }
+       }
+      },
+      {
+       "number": "6",
+       "order": 9,
+       "positionLabel": "Flanker",
+       "player": {
+        "id": "64886",
+        "altId": "bb8057b1-a556-4b91-9097-13f777c27bd0",
+        "isReplacement": false,
+        "name": {
+         "display": "Ben Gunter"
+        }
+       }
+      },
+      {
+       "number": "7",
+       "order": 11,
+       "positionLabel": "Flanker",
+       "player": {
+        "id": "62594",
+        "altId": "378f0f04-7a18-4651-872f-6ad91df38887",
+        "isReplacement": false,
+        "name": {
+         "display": "Kanji Shimokawa"
+        }
+       }
+      },
+      {
+       "number": "8",
+       "order": 12,
+       "positionLabel": "Number 8",
+       "player": {
+        "id": "57215",
+        "altId": "c50dfb1d-68d7-411b-8056-444852b431ff",
+        "isReplacement": false,
+        "name": {
+         "display": "Faulua Makisi"
+        }
+       }
+      },
+      {
+       "number": "9",
+       "order": 13,
+       "positionLabel": "Scrum Half",
+       "player": {
+        "id": "57136",
+        "altId": "740dd432-7f1b-47ab-8d52-12cc467f0f9c",
+        "isReplacement": false,
+        "name": {
+         "display": "Naoto Saito"
+        }
+       }
+      },
+      {
+       "number": "10",
+       "order": 17,
+       "positionLabel": "Fly Half",
+       "player": {
+        "id": "35cfb35c-4f88-4db4-a6c8-2c83c93cc1e5",
+        "altId": "35cfb35c-4f88-4db4-a6c8-2c83c93cc1e5",
+        "isReplacement": false,
+        "name": {
+         "display": "Ryunosuke Ito"
+        }
+       }
+      },
+      {
+       "number": "11",
+       "order": 18,
+       "positionLabel": "Wing",
+       "player": {
+        "id": "605e6f4a-f60b-4e27-b7b5-abaa15ec22d9",
+        "altId": "605e6f4a-f60b-4e27-b7b5-abaa15ec22d9",
+        "isReplacement": false,
+        "name": {
+         "display": "Inoke Burua"
+        }
+       }
+      },
+      {
+       "number": "12",
+       "order": 19,
+       "positionLabel": "Centre",
+       "player": {
+        "id": "5154d5b1-2ad7-4aec-a713-083e119061e6",
+        "altId": "5154d5b1-2ad7-4aec-a713-083e119061e6",
+        "isReplacement": false,
+        "name": {
+         "display": "Charlie Lawrence"
+        }
+       }
+      },
+      {
+       "number": "13",
+       "order": 21,
+       "positionLabel": "Centre",
+       "player": {
+        "id": "58b7f8b2-1a3c-4ea3-ab4f-645fe616ca21",
+        "altId": "58b7f8b2-1a3c-4ea3-ab4f-645fe616ca21",
+        "isReplacement": false,
+        "name": {
+         "display": "Samisoni Tua"
+        }
+       }
+      },
+      {
+       "number": "14",
+       "order": 25,
+       "positionLabel": "Wing",
+       "player": {
+        "id": "75878",
+        "altId": "03d6760c-2362-4960-9558-418353d2bee3",
+        "isReplacement": false,
+        "name": {
+         "display": "Kazuma Ueda"
+        }
+       }
+      },
+      {
+       "number": "15",
+       "order": 26,
+       "positionLabel": "Full Back",
+       "player": {
+        "id": "a900c21a-592e-4b6c-832c-8c5979b74907",
+        "altId": "a900c21a-592e-4b6c-832c-8c5979b74907",
+        "isReplacement": false,
+        "name": {
+         "display": "Takuro Matsunaga"
+        }
+       }
+      },
+      {
+       "number": "16",
+       "order": 31,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "2cb691be-52f7-4c69-a685-4984ad9c7255",
+        "altId": "2cb691be-52f7-4c69-a685-4984ad9c7255",
+        "isReplacement": true,
+        "name": {
+         "display": "Kenji Sato"
+        }
+       }
+      },
+      {
+       "number": "17",
+       "order": 32,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "8bb5c19d-c5f7-4bdf-b985-c1871a0ada7f",
+        "altId": "8bb5c19d-c5f7-4bdf-b985-c1871a0ada7f",
+        "isReplacement": true,
+        "name": {
+         "display": "Sojiro Otsuka"
+        }
+       }
+      },
+      {
+       "number": "18",
+       "order": 33,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "4af06b35-4f4d-437c-b621-0928474fa752",
+        "altId": "4af06b35-4f4d-437c-b621-0928474fa752",
+        "isReplacement": true,
+        "name": {
+         "display": "Sanshiro Kihara"
+        }
+       }
+      },
+      {
+       "number": "19",
+       "order": 34,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "45543",
+        "altId": "4dc84a61-de2e-4150-82ef-19731de5540b",
+        "isReplacement": true,
+        "name": {
+         "display": "Ruan Botha"
+        }
+       }
+      },
+      {
+       "number": "20",
+       "order": 35,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "47879",
+        "altId": "6376a80f-f69c-4317-b9a1-5d9f62feb80b",
+        "isReplacement": true,
+        "name": {
+         "display": "Michael Stolberg"
+        }
+       }
+      },
+      {
+       "number": "21",
+       "order": 36,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "60426",
+        "altId": "58c5c3c1-faae-4971-ba39-e8dcb25b9cba",
+        "isReplacement": true,
+        "name": {
+         "display": "Esei Haangana"
+        }
+       }
+      },
+      {
+       "number": "22",
+       "order": 37,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "62595",
+        "altId": "c3ca1e1b-004e-4636-ae82-5a3fd9048bb5",
+        "isReplacement": true,
+        "name": {
+         "display": "Shinobu Fujiwara"
+        }
+       }
+      },
+      {
+       "number": "23",
+       "order": 38,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "256827ab-0bb4-4446-8a55-7ca0dd26db0e",
+        "altId": "256827ab-0bb4-4446-8a55-7ca0dd26db0e",
+        "isReplacement": true,
+        "name": {
+         "display": "Jisu Lee"
+        }
+       }
+      },
+      {
+       "number": null,
+       "positionLabel": "Head Coach",
+       "player": {
+        "id": "12723",
+        "altId": "6d10d37b-d8cb-4cb4-90e6-42e9628e85f3",
+        "isReplacement": false,
+        "name": {
+         "display": "Eddie Jones"
+        }
+       }
+      }
+     ]
+    },
+    "disciplinary": {
+     "RC": [],
+     "YC": []
+    }
+   },
+   {
+    "teamList": {
+     "list": [
+      {
+       "number": "1",
+       "order": 1,
+       "positionLabel": "Prop",
+       "player": {
+        "id": "49571",
+        "altId": "ea96972f-5b7d-4138-97fc-cae38dc7bf78",
+        "isReplacement": false,
+        "name": {
+         "display": "Peni Ravai"
+        }
+       }
+      },
+      {
+       "number": "2",
+       "order": 4,
+       "positionLabel": "Hooker",
+       "player": {
+        "id": "64556",
+        "altId": "bd0aceb6-d69a-4dcd-acce-64ae77fe5a4a",
+        "isReplacement": false,
+        "name": {
+         "display": "Tevita Ikanivere"
+        }
+       }
+      },
+      {
+       "number": "3",
+       "order": 5,
+       "positionLabel": "Prop",
+       "player": {
+        "id": "57285",
+        "altId": "159caeb7-9bdc-4f9f-8050-b333b1208391",
+        "isReplacement": false,
+        "name": {
+         "display": "Inoke Ravuiwasa"
+        }
+       }
+      },
+      {
+       "number": "4",
+       "order": 6,
+       "positionLabel": "Lock",
+       "player": {
+        "id": "b6ee16b3-c8fa-4755-8e97-a796f2f54756",
+        "altId": "b6ee16b3-c8fa-4755-8e97-a796f2f54756",
+        "isReplacement": false,
+        "name": {
+         "display": "Mesake Vocevoce"
+        }
+       }
+      },
+      {
+       "number": "5",
+       "order": 8,
+       "positionLabel": "Lock",
+       "player": {
+        "id": "66905",
+        "altId": "9404accd-3315-47be-832c-02fe90adfac8",
+        "isReplacement": false,
+        "name": {
+         "display": "Isoa Nasilasila"
+        }
+       }
+      },
+      {
+       "number": "6",
+       "order": 9,
+       "positionLabel": "Flanker",
+       "player": {
+        "id": "c5c99973-0ae3-4f3a-aa6c-fe074c755a29",
+        "altId": "c5c99973-0ae3-4f3a-aa6c-fe074c755a29",
+        "isReplacement": false,
+        "name": {
+         "display": "Aporosa Vuniyayawa"
+        }
+       }
+      },
+      {
+       "number": "7",
+       "order": 11,
+       "positionLabel": "Flanker",
+       "player": {
+        "id": "69389",
+        "altId": "7d966de8-ad9a-4bd7-adf3-2d42e36908db",
+        "isReplacement": false,
+        "name": {
+         "display": "Kitione Salawa"
+        }
+       }
+      },
+      {
+       "number": "8",
+       "order": 12,
+       "positionLabel": "Number 8",
+       "player": {
+        "id": "74333",
+        "altId": "044d9c49-ff05-4cd5-8c9c-29fbd58c2134",
+        "isReplacement": false,
+        "name": {
+         "display": "Motikiai Murray"
+        }
+       }
+      },
+      {
+       "number": "9",
+       "order": 13,
+       "positionLabel": "Scrum Half",
+       "player": {
+        "id": "63324",
+        "altId": "0dc59265-dc02-4081-b4e3-21d040e7b3fe",
+        "isReplacement": false,
+        "name": {
+         "display": "Terio Tamani Veilawa"
+        }
+       }
+      },
+      {
+       "number": "10",
+       "order": 17,
+       "positionLabel": "Fly Half",
+       "player": {
+        "id": "b54732a0-b196-4981-ad07-6799f0cabe8b",
+        "altId": "b54732a0-b196-4981-ad07-6799f0cabe8b",
+        "isReplacement": false,
+        "name": {
+         "display": "Isaiah Armstrong-Ravula"
+        }
+       }
+      },
+      {
+       "number": "11",
+       "order": 18,
+       "positionLabel": "Wing",
+       "player": {
+        "id": "c9d186ca-79cd-469b-831f-384ff058b292",
+        "altId": "c9d186ca-79cd-469b-831f-384ff058b292",
+        "isReplacement": false,
+        "name": {
+         "display": "Joji Nasova"
+        }
+       }
+      },
+      {
+       "number": "12",
+       "order": 19,
+       "positionLabel": "Centre",
+       "player": {
+        "id": "74335",
+        "altId": "37c223b4-997f-4f3a-8a07-8684c79ef259",
+        "isReplacement": false,
+        "name": {
+         "display": "Ratu Rabitu"
+        }
+       }
+      },
+      {
+       "number": "13",
+       "order": 21,
+       "positionLabel": "Centre",
+       "player": {
+        "id": "62254",
+        "altId": "a191197e-e971-47d7-a4d1-3ce7ae20d9b7",
+        "isReplacement": false,
+        "name": {
+         "display": "Tuidraki Samusamuvodre"
+        }
+       }
+      },
+      {
+       "number": "14",
+       "order": 25,
+       "positionLabel": "Wing",
+       "player": {
+        "id": "e6934bca-adc1-417f-a353-adbca314c8c5",
+        "altId": "e6934bca-adc1-417f-a353-adbca314c8c5",
+        "isReplacement": false,
+        "name": {
+         "display": "Nacani Boginisoko"
+        }
+       }
+      },
+      {
+       "number": "15",
+       "order": 26,
+       "positionLabel": "Full Back",
+       "player": {
+        "id": "66970",
+        "altId": "5c37788e-e686-4882-a1f6-40e2c3866132",
+        "isReplacement": false,
+        "name": {
+         "display": "Isaac Ratumaitavuki-Kneepkens"
+        }
+       }
+      },
+      {
+       "number": "16",
+       "order": 31,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "58928041-5874-4213-9534-c676c78b0ff5",
+        "altId": "58928041-5874-4213-9534-c676c78b0ff5",
+        "isReplacement": true,
+        "name": {
+         "display": "Kavaia Tagivetaua"
+        }
+       }
+      },
+      {
+       "number": "17",
+       "order": 32,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "66902",
+        "altId": "5ef2fe23-b985-499e-a756-ceef5732c00b",
+        "isReplacement": true,
+        "name": {
+         "display": "Meli Tuni"
+        }
+       }
+      },
+      {
+       "number": "18",
+       "order": 33,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "48797",
+        "altId": "d9575532-8a72-41c0-b5a0-b33eddc248b7",
+        "isReplacement": true,
+        "name": {
+         "display": "Mesake Doge"
+        }
+       }
+      },
+      {
+       "number": "19",
+       "order": 34,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "66907",
+        "altId": "625b2eff-8a7b-4331-b73a-cdda31bc3611",
+        "isReplacement": true,
+        "name": {
+         "display": "Vilive Miramira"
+        }
+       }
+      },
+      {
+       "number": "20",
+       "order": 35,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "a9574c20-7f96-4404-aeb9-33cedac6e37d",
+        "altId": "a9574c20-7f96-4404-aeb9-33cedac6e37d",
+        "isReplacement": true,
+        "name": {
+         "display": "Peni Naruma"
+        }
+       }
+      },
+      {
+       "number": "21",
+       "order": 36,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "57371",
+        "altId": "d16ee5a6-25e2-4705-ad3e-ae08716d8391",
+        "isReplacement": true,
+        "name": {
+         "display": "Frank Lomani"
+        }
+       }
+      },
+      {
+       "number": "22",
+       "order": 37,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "42557",
+        "altId": "2fcd9bb3-b8d4-4e0d-b1af-e14064a1e4d4",
+        "isReplacement": true,
+        "name": {
+         "display": "Ben Volavola"
+        }
+       }
+      },
+      {
+       "number": "23",
+       "order": 38,
+       "positionLabel": "Replacement",
+       "player": {
+        "id": "63badf4e-39f8-48eb-a6a6-9d5ee5d140bf",
+        "altId": "63badf4e-39f8-48eb-a6a6-9d5ee5d140bf",
+        "isReplacement": true,
+        "name": {
+         "display": "Kavekini Boselawa"
+        }
+       }
+      },
+      {
+       "number": null,
+       "positionLabel": "Head Coach",
+       "player": {
+        "id": "14580",
+        "altId": "d3e8398e-3ffa-4058-b62a-170834d5ba1a",
+        "isReplacement": false,
+        "name": {
+         "display": "Jake White"
+        }
+       }
+      }
+     ]
+    },
+    "disciplinary": {
+     "RC": [],
+     "YC": []
+    }
+   }
+  ]
+ },
+ "timeline": {
+  "timeline": [
+   {
+    "type": "Red",
+    "typeLabel": "Red Card",
+    "teamIndex": 1,
+    "playerId": "74333",
+    "time": {
+     "secs": 2002
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 0,
+    "playerId": "8bb5c19d-c5f7-4bdf-b985-c1871a0ada7f",
+    "time": {
+     "secs": 2693
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 0,
+    "playerId": "65984",
+    "time": {
+     "secs": 2693
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 1,
+    "playerId": "58928041-5874-4213-9534-c676c78b0ff5",
+    "time": {
+     "secs": 3226
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 1,
+    "playerId": "64556",
+    "time": {
+     "secs": 3226
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 1,
+    "playerId": "42557",
+    "time": {
+     "secs": 3227
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 1,
+    "playerId": "b54732a0-b196-4981-ad07-6799f0cabe8b",
+    "time": {
+     "secs": 3227
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 0,
+    "playerId": "47879",
+    "time": {
+     "secs": 3479
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 0,
+    "playerId": "57215",
+    "time": {
+     "secs": 3479
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 0,
+    "playerId": "4af06b35-4f4d-437c-b621-0928474fa752",
+    "time": {
+     "secs": 3480
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 0,
+    "playerId": "c3da7032-6655-43e1-9cdc-1ce020c75f0d",
+    "time": {
+     "secs": 3480
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 1,
+    "playerId": "66902",
+    "time": {
+     "secs": 3595
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 1,
+    "playerId": "49571",
+    "time": {
+     "secs": 3595
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 1,
+    "playerId": "48797",
+    "time": {
+     "secs": 3596
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 1,
+    "playerId": "57285",
+    "time": {
+     "secs": 3596
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 1,
+    "playerId": "a9574c20-7f96-4404-aeb9-33cedac6e37d",
+    "time": {
+     "secs": 3597
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 1,
+    "playerId": "b6ee16b3-c8fa-4755-8e97-a796f2f54756",
+    "time": {
+     "secs": 3597
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 1,
+    "playerId": "63badf4e-39f8-48eb-a6a6-9d5ee5d140bf",
+    "time": {
+     "secs": 3598
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 1,
+    "playerId": "62254",
+    "time": {
+     "secs": 3598
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 1,
+    "playerId": "57371",
+    "time": {
+     "secs": 3599
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 1,
+    "playerId": "63324",
+    "time": {
+     "secs": 3599
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 0,
+    "playerId": "60426",
+    "time": {
+     "secs": 3979
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 0,
+    "playerId": "64886",
+    "time": {
+     "secs": 3979
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 0,
+    "playerId": "45543",
+    "time": {
+     "secs": 3980
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 0,
+    "playerId": "72580",
+    "time": {
+     "secs": 3980
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 0,
+    "playerId": "256827ab-0bb4-4446-8a55-7ca0dd26db0e",
+    "time": {
+     "secs": 3981
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 0,
+    "playerId": "5154d5b1-2ad7-4aec-a713-083e119061e6",
+    "time": {
+     "secs": 3981
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 0,
+    "playerId": "62595",
+    "time": {
+     "secs": 4017
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 0,
+    "playerId": "57136",
+    "time": {
+     "secs": 4017
+    }
+   },
+   {
+    "type": "Sub On",
+    "typeLabel": "Replacement On",
+    "teamIndex": 0,
+    "playerId": "2cb691be-52f7-4c69-a685-4984ad9c7255",
+    "time": {
+     "secs": 4018
+    }
+   },
+   {
+    "type": "Sub Off",
+    "typeLabel": "Replacement Off",
+    "teamIndex": 0,
+    "playerId": "65987",
+    "time": {
+     "secs": 4018
+    }
+   }
+  ]
+ }
+}
