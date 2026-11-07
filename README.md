@@ -30,7 +30,7 @@ pushes it. In the repo's Settings > Pages, set the source to branch `main`, fold
 ## Dashboard
 
 `dashboard.html` is a single self-contained file: full table, filters for match type
-(internationals only by default), team, position group, position and player, and a
+(internationals only by default), team, year, month, position and player, and a
 player-totals view. A match is an international when both sides are national teams;
 club and invitational sides (Stormers, Barbarians, ...) are not. The build prints the
 matches it excluded; add missing nations with `--national "Team Name"`.

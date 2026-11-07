@@ -215,8 +215,10 @@ tbody tr:hover { background: var(--hover); }
         </select></div>
       <div class="field"><label for="f-team">Team</label>
         <select id="f-team"></select></div>
-      <div class="field"><label for="f-group">Position group</label>
-        <select id="f-group"></select></div>
+      <div class="field"><label for="f-year">Year</label>
+        <select id="f-year"></select></div>
+      <div class="field"><label for="f-month">Month</label>
+        <select id="f-month"></select></div>
       <div class="field"><label for="f-pos">Position</label>
         <select id="f-pos"></select></div>
       <div class="field"><label for="f-q">Player</label>
@@ -258,14 +260,15 @@ tbody tr:hover { background: var(--hover); }
 <script>
 const DATA = __DATA__;
 const META = __META__;
-const GROUPS = ["Front row", "Second row", "Back row", "Half-backs", "Centres", "Back three"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July",
+  "August", "September", "October", "November", "December"];
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g,
   c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const num1 = n => (Math.round(n * 10) / 10).toLocaleString(undefined, {maximumFractionDigits: 1});
 const int = n => Math.round(n).toLocaleString();
 
-const state = {type: "intl", team: "", group: "", pos: "", q: "", view: "apps", playedOnly: true,
+const state = {type: "intl", team: "", year: "", month: "", pos: "", q: "", view: "apps", playedOnly: true,
   hideUncertain: false, sortKey: "d", sortDir: "desc", page: 0, size: 100};
 
 const COLS = {
@@ -292,7 +295,7 @@ function fillSelect(sel, values, allLabel, selected) {
 function positionOptions() {
   const slot = {};
   DATA.forEach(r => {
-    if (!r.pos || (state.group && r.g !== state.group)) return;
+    if (!r.pos) return;
     const n = r.n == null ? 99 : r.n;
     if (!(r.pos in slot) || n < slot[r.pos]) slot[r.pos] = n;
   });
@@ -303,9 +306,24 @@ function setupFilters() {
   const inType = r => state.type === "all" || (state.type === "intl") === !!r.i;
   const teams = [...new Set(DATA.filter(inType).map(r => r.t))].sort();
   fillSelect($("f-team"), teams, "All teams", state.team);
-  const present = new Set(DATA.map(r => r.g).filter(Boolean));
-  fillSelect($("f-group"), GROUPS.filter(g => present.has(g)), "All groups", state.group);
+  const scoped = DATA.filter(inType);
+  const years = [...new Set(scoped.map(r => r.d.slice(0, 4)))].sort();
+  fillSelect($("f-year"), years, "All years", state.year);
+  state.year = $("f-year").value;
+  setupMonths();
   fillSelect($("f-pos"), positionOptions(), "All positions", state.pos);
+}
+
+// Months that occur in the chosen match type and year (all years when none is chosen).
+function setupMonths() {
+  const inType = r => state.type === "all" || (state.type === "intl") === !!r.i;
+  const months = [...new Set(DATA.filter(r => inType(r) && (!state.year || r.d.slice(0, 4) === state.year))
+    .map(r => r.d.slice(5, 7)))].sort();
+  const sel = $("f-month");
+  sel.innerHTML = '<option value="">All months</option>' +
+    months.map(m => '<option value="' + m + '">' + MONTHS[+m - 1] + "</option>").join("");
+  sel.value = months.includes(state.month) ? state.month : "";
+  state.month = sel.value;
 }
 
 function filtered() {
@@ -313,7 +331,8 @@ function filtered() {
   return DATA.filter(r =>
     (state.type === "all" || (state.type === "intl") === !!r.i) &&
     (!state.team || r.t === state.team) &&
-    (!state.group || r.g === state.group) &&
+    (!state.year || r.d.slice(0, 4) === state.year) &&
+    (!state.month || r.d.slice(5, 7) === state.month) &&
     (!state.pos || r.pos === state.pos) &&
     (!state.playedOnly || r.m > 0) &&
     (!state.hideUncertain || r.src !== "replaced_ambiguous") &&
@@ -436,16 +455,13 @@ function setView(view) {
 function wire() {
   $("f-type").onchange = e => {
     state.type = e.target.value; state.page = 0; setupFilters();
-    state.team = $("f-team").value; state.group = $("f-group").value;
-    state.pos = $("f-pos").value; render();
+    state.team = $("f-team").value; state.pos = $("f-pos").value; render();
   };
   $("f-team").onchange = e => { state.team = e.target.value; state.page = 0; render(); };
-  $("f-group").onchange = e => {
-    state.group = e.target.value;
-    fillSelect($("f-pos"), positionOptions(), "All positions", state.pos);
-    state.pos = $("f-pos").value;
-    state.page = 0; render();
+  $("f-year").onchange = e => {
+    state.year = e.target.value; setupMonths(); state.page = 0; render();
   };
+  $("f-month").onchange = e => { state.month = e.target.value; state.page = 0; render(); };
   $("f-pos").onchange = e => { state.pos = e.target.value; state.page = 0; render(); };
   $("f-q").oninput = e => { state.q = e.target.value; state.page = 0; render(); };
   $("f-played").onchange = e => { state.playedOnly = e.target.checked; state.page = 0; render(); };
@@ -456,7 +472,7 @@ function wire() {
   $("prev").onclick = () => { state.page--; render(); };
   $("next").onclick = () => { state.page++; render(); };
   $("reset").onclick = () => {
-    Object.assign(state, {type: "intl", team: "", group: "", pos: "", q: "", playedOnly: true, hideUncertain: false});
+    Object.assign(state, {type: "intl", team: "", year: "", month: "", pos: "", q: "", playedOnly: true, hideUncertain: false});
     $("f-type").value = "intl"; $("f-q").value = ""; $("f-played").checked = true; $("f-uncertain").checked = false;
     setupFilters(); setView(state.view);
   };
