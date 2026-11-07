@@ -21,6 +21,14 @@ Fetching is cached in `cache/`, so re-running resumes where it stopped. Use
 `--refresh` after upgrading the script to re-process cached matches.
 `--teams "France,Ireland"` changes the teams; `--both` requires both sides to match.
 
+## Double-click scripts (Windows)
+
+- `update_all.bat` fetches new matches, rebuilds `dashboard.html` and opens it
+- `build_dashboard.bat` rebuilds and opens the dashboard without fetching
+- `top_players.bat` prints the top players per position and saves `minutes_by_position.csv`
+
+Keep them in the same folder as the Python scripts and `rugby.db`.
+
 ## Publish the dashboard (GitHub Pages)
 
 Run `publish.bat` (Windows). It rebuilds `index.html` from `rugby.db`, commits and
