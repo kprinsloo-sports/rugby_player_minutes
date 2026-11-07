@@ -45,8 +45,18 @@ MAX_END_SECS = 110 * 60
 # Minutes calculation (pure functions, no network)
 # --------------------------------------------------------------------------
 
+# Points per scoring event. A penalty try is credited to the team, not a player.
+SCORE_POINTS = {"try": 5, "conversion": 2, "penalty_goal": 3, "drop_goal": 3,
+                "penalty_try": 7}
+SCORE_LABELS = {"try": "try", "penalty try": "penalty_try", "conversion": "conversion",
+                "penalty": "penalty_goal", "penalty goal": "penalty_goal",
+                "drop goal": "drop_goal", "drop": "drop_goal"}
+
+
 def _classify(event):
-    label = (event.get("typeLabel") or event.get("type") or "").lower()
+    label = (event.get("typeLabel") or event.get("type") or "").strip().lower()
+    if label in SCORE_LABELS:
+        return SCORE_LABELS[label]
     if "replacement on" in label or label == "sub on":
         return "on"
     if "replacement off" in label or label == "sub off":
@@ -155,13 +165,17 @@ def compute_appearances(summary, timeline):
                 "open": 0 if started else None,
                 "yellow_cards": 0,
                 "red_cards": 0,
+                "tries": 0, "conversions": 0, "penalty_goals": 0, "drop_goals": 0,
             }
             index[str(p["id"])] = key
             index[key] = key
 
     def lookup(event):
-        for field in ("playerId", "playerAltId"):
-            value = event.get(field)
+        candidates = [event.get("playerId"), event.get("playerAltId")]
+        nested = event.get("player")
+        if isinstance(nested, dict):
+            candidates += [nested.get("id"), nested.get("altId")]
+        for value in candidates:
             if value is not None and str(value) in index:
                 return players[index[str(value)]]
         return None
@@ -184,12 +198,28 @@ def compute_appearances(summary, timeline):
 
     ons = {0: 0, 1: 0}
     offs = {0: 0, 1: 0}
+    team_points = {0: 0, 1: 0}
+    scoring_events = 0
     for _, ev in events:
         kind = _classify(ev)
         if kind is None:
             continue
         secs = ev["time"]["secs"]
         p = lookup(ev)
+        if kind in SCORE_POINTS:
+            scoring_events += 1
+            team = p["team_index"] if p is not None else ev.get("teamIndex")
+            if team in team_points:
+                team_points[team] += SCORE_POINTS[kind]
+            if kind == "penalty_try":
+                continue
+            if p is None:
+                warnings.append(f"{kind.replace('_', ' ')} at {secs}s could not be "
+                                f"matched to a player ({ev.get('playerId')})")
+                continue
+            p[{"try": "tries", "conversion": "conversions",
+               "penalty_goal": "penalty_goals", "drop_goal": "drop_goals"}[kind]] += 1
+            continue
         if p is None:
             warnings.append(f"{kind} event at {secs}s for unknown player "
                             f"{ev.get('playerId')}")
@@ -222,6 +252,14 @@ def compute_appearances(summary, timeline):
                 warnings.append(f"{p['player_name']} went off at {secs}s but was not on")
         elif kind == "yellow":
             p["yellow_cards"] += 1
+
+    scores = match.get("scores") or [None, None]
+    if scoring_events:
+        for ti in (0, 1):
+            if scores[ti] is not None and team_points[ti] != scores[ti]:
+                warnings.append(
+                    f"{team_names[ti]}: scoring events add up to {team_points[ti]} points "
+                    f"but the final score is {scores[ti]} (missing events?)")
 
     for ti in (0, 1):
         if ons[ti] != offs[ti]:
@@ -260,6 +298,12 @@ def compute_appearances(summary, timeline):
             "minutes_played": round(seconds / 60, 1),
             "yellow_cards": p["yellow_cards"],
             "red_cards": p["red_cards"],
+            "tries": p["tries"],
+            "conversions": p["conversions"],
+            "penalty_goals": p["penalty_goals"],
+            "drop_goals": p["drop_goals"],
+            "points": (5 * p["tries"] + 2 * p["conversions"]
+                       + 3 * p["penalty_goals"] + 3 * p["drop_goals"]),
         })
     rows.sort(key=lambda r: (r["team_index"], r["shirt_number"]))
     return rows, warnings
@@ -354,6 +398,11 @@ CREATE TABLE IF NOT EXISTS appearances (
     minutes_played REAL,
     yellow_cards   INTEGER,
     red_cards      INTEGER,
+    tries          INTEGER DEFAULT 0,
+    conversions    INTEGER DEFAULT 0,
+    penalty_goals  INTEGER DEFAULT 0,
+    drop_goals     INTEGER DEFAULT 0,
+    points         INTEGER DEFAULT 0,
     PRIMARY KEY (match_id, player_key)
 );
 CREATE INDEX IF NOT EXISTS idx_app_player ON appearances(player_name);
@@ -368,7 +417,10 @@ def migrate(conn):
                      "INTEGER DEFAULT 0")
     cols = {r[1] for r in conn.execute("PRAGMA table_info(appearances)")}
     for name, decl in (("listed_position", "TEXT"), ("position_number", "INTEGER"),
-                       ("position_group", "TEXT"), ("position_source", "TEXT")):
+                       ("position_group", "TEXT"), ("position_source", "TEXT"),
+                       ("tries", "INTEGER DEFAULT 0"), ("conversions", "INTEGER DEFAULT 0"),
+                       ("penalty_goals", "INTEGER DEFAULT 0"),
+                       ("drop_goals", "INTEGER DEFAULT 0"), ("points", "INTEGER DEFAULT 0")):
         if cols and name not in cols:
             conn.execute(f"ALTER TABLE appearances ADD COLUMN {name} {decl}")
 
@@ -393,13 +445,15 @@ def save_match(conn, summary, rows, timeline=None):
         "player_name, shirt_number, position, started, listed_position, "
         "position_number, position_group, position_source, appeared, "
         "sub_on_minute, sub_off_minute, seconds_played, minutes_played, "
-        "yellow_cards, red_cards) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "yellow_cards, red_cards, tries, conversions, penalty_goals, drop_goals, "
+        "points) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         [(mid, r["team"], r["player_key"], r["player_id"], r["player_name"],
           r["shirt_number"], r["position"], r["started"], r["listed_position"],
           r["position_number"], r["position_group"], r["position_source"],
           r["appeared"], r["sub_on_minute"], r["sub_off_minute"],
           r["seconds_played"], r["minutes_played"], r["yellow_cards"],
-          r["red_cards"])
+          r["red_cards"], r["tries"], r["conversions"], r["penalty_goals"],
+          r["drop_goals"], r["points"])
          for r in rows])
 
 

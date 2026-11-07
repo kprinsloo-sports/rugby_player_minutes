@@ -43,6 +43,14 @@ player-totals view. A match is an international when both sides are national tea
 club and invitational sides (Stormers, Barbarians, ...) are not. The build prints the
 matches it excluded; add missing nations with `--national "Team Name"`.
 
+## Scoring stats
+
+Per player per match: tries, conversions, penalty goals, drop goals and points
+(5 / 2 / 3 / 3). A penalty try is credited to the team only. After fetching, each
+match's points are checked against the final score and any mismatch is printed as a
+warning (the feed does not record missed penalties and has few missed conversions).
+`python analysis.py --sort tries` (or `points`) ranks by that stat instead of minutes.
+
 ## Caveats
 
 - Unofficial API; it may change without notice.

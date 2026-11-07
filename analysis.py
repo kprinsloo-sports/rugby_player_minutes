@@ -6,6 +6,7 @@ Examples:
   python analysis.py --team "South Africa"    # one team only
   python analysis.py --top 10 --group "Back row"
   python analysis.py --position Hooker --top 20
+  python analysis.py --sort tries             # rank by tries (or: points, minutes)
   python analysis.py --csv minutes_by_position.csv
   python analysis.py --since 2026-01-01 --until 2026-06-30
 """
@@ -22,7 +23,9 @@ SELECT a.position, a.position_group, a.player_name, a.team,
        COUNT(*)                          AS matches,
        SUM(a.started)                    AS starts,
        ROUND(SUM(a.minutes_played), 1)   AS total_minutes,
-       ROUND(AVG(a.minutes_played), 1)   AS avg_minutes
+       ROUND(AVG(a.minutes_played), 1)   AS avg_minutes,
+       SUM(a.tries)                      AS tries,
+       SUM(a.points)                     AS points
 FROM appearances a JOIN matches m ON m.match_id = a.match_id
 WHERE a.appeared = 1 AND a.position IS NOT NULL
   AND a.position_source != 'replaced_ambiguous'
@@ -38,6 +41,8 @@ def main():
     ap.add_argument("--team")
     ap.add_argument("--position")
     ap.add_argument("--group")
+    ap.add_argument("--sort", choices=["minutes", "tries", "points"], default="minutes",
+                    help="what to rank by (default: minutes)")
     ap.add_argument("--top", type=int, default=5, help="players per position (0 = all)")
     ap.add_argument("--since")
     ap.add_argument("--until")
@@ -48,7 +53,7 @@ def main():
 
     conn = sqlite3.connect(args.db)
     cols = {r[1] for r in conn.execute("PRAGMA table_info(appearances)")}
-    if "position_group" not in cols:
+    if "points" not in cols or "position_group" not in cols:
         sys.exit("No position data yet. Run: python rugby_minutes.py --refresh")
     mcols = {r[1] for r in conn.execute("PRAGMA table_info(matches)")}
     date_col = "match_date" if "match_date" in mcols else next(
@@ -84,21 +89,22 @@ def main():
 
     out = []
     for pos in order:
-        ranked = sorted(by_pos[pos], key=lambda r: (-r[6], r[2]))
+        sort_idx = {"minutes": 6, "tries": 8, "points": 9}[args.sort]
+        ranked = sorted(by_pos[pos], key=lambda r: (-(r[sort_idx] or 0), -r[6], r[2]))
         if args.top:
             ranked = ranked[:args.top]
         for i, r in enumerate(ranked, 1):
             out.append((pos, i) + r[2:] )
         print(f"\n{pos}")
-        print(f"  {'#':<3}{'Player':<30}{'Team':<16}{'Mtch':>5}{'Strt':>5}{'Total':>9}{'Avg':>7}")
+        print(f"  {'#':<3}{'Player':<30}{'Team':<16}{'Mtch':>5}{'Strt':>5}{'Total':>9}{'Avg':>7}{'Tries':>7}{'Pts':>6}")
         for i, r in enumerate(ranked, 1):
-            print(f"  {i:<3}{r[2][:29]:<30}{r[3][:15]:<16}{r[4]:>5}{r[5]:>5}{r[6]:>9.1f}{r[7]:>7.1f}")
+            print(f"  {i:<3}{r[2][:29]:<30}{r[3][:15]:<16}{r[4]:>5}{r[5]:>5}{r[6]:>9.1f}{r[7]:>7.1f}{r[8] or 0:>7}{r[9] or 0:>6}")
 
     if args.csv:
         with open(args.csv, "w", newline="", encoding="utf-8") as f:
             w = csv.writer(f)
             w.writerow(["position", "rank", "player", "team", "matches", "starts",
-                        "total_minutes", "avg_minutes"])
+                        "total_minutes", "avg_minutes", "tries", "points"])
             w.writerows(out)
         print(f"\nWrote {len(out)} rows to {args.csv}")
 

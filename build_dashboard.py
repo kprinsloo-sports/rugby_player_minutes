@@ -45,7 +45,7 @@ SELECT a.match_id, m.match_date, m.team_a, m.team_b, m.competition,
        a.team, a.player_key, a.player_name, a.shirt_number, a.position,
        a.position_number, a.position_group, a.position_source, a.started,
        a.sub_on_minute, a.sub_off_minute, a.minutes_played,
-       a.yellow_cards, a.red_cards
+       a.yellow_cards, a.red_cards, a.tries, a.points
 FROM appearances a JOIN matches m USING (match_id)
 ORDER BY m.match_date DESC, a.match_id, a.team, a.shirt_number
 """
@@ -56,18 +56,22 @@ def load_rows(db_path, national=NATIONAL_TEAMS):
     cols = {r[1] for r in conn.execute("PRAGMA table_info(appearances)")}
     if not cols:
         sys.exit(f"{db_path} has no appearances table - run rugby_minutes.py first.")
+    if "points" not in cols:
+        sys.exit("The database has no try/points columns yet. Run rugby_minutes.py "
+                 "with --refresh (same dates as before) to add them, then try again.")
     if "position_group" not in cols:
         sys.exit("The database has no position columns yet. Run rugby_minutes.py "
                  "with --refresh (same dates as before) to add them, then try again.")
     out = []
     for (mid, date, ta, tb, comp, est, team, key, name, shirt, pos, slot, group,
-         src, started, on, off, mins, yc, rc) in conn.execute(QUERY):
+         src, started, on, off, mins, yc, rc, tries, points) in conn.execute(QUERY):
         out.append({
             "id": mid, "d": date, "ma": f"{ta} v {tb}", "c": comp, "est": est,
             "i": 1 if is_international(ta, tb, national) else 0,
             "t": team, "k": key, "p": name, "sh": shirt, "pos": pos, "n": slot,
             "g": group, "src": src, "st": started, "on": on, "off": off,
             "m": mins or 0, "yc": yc or 0, "rc": rc or 0,
+            "tr": tries or 0, "pts": points or 0,
         })
     return out
 
@@ -254,7 +258,8 @@ tbody tr:hover { background: var(--hover); }
   unusable for that match, so players on the pitch at the end are counted to 80:00 or the
   last recorded event. <span class="mark">?</span> uncertain position: several substitutions
   happened in the same second, so who replaced whom is a guess. Yellow cards are shown but
-  sin-bin time is not deducted. <span id="gen"></span></p>
+  sin-bin time is not deducted. Tries and points count the player's own tries, conversions
+  and penalty goals; a penalty try is credited to the team only. <span id="gen"></span></p>
 </main>
 
 <script>
@@ -277,12 +282,14 @@ const COLS = {
     {k: "p", label: "Player"}, {k: "pos", label: "Position"}, {k: "g", label: "Group"},
     {k: "st", label: "Role"}, {k: "m", label: "Minutes", num: true},
     {k: "on", label: "On", num: true}, {k: "off", label: "Off", num: true},
+    {k: "tr", label: "Tries", num: true}, {k: "pts", label: "Points", num: true},
     {k: "cards", label: "Cards"}],
   totals: [
     {k: "p", label: "Player"}, {k: "t", label: "Team"}, {k: "pos", label: "Position"},
     {k: "g", label: "Group"}, {k: "apps", label: "Matches", num: true},
     {k: "starts", label: "Starts", num: true}, {k: "m", label: "Total minutes", num: true},
-    {k: "avg", label: "Avg per match", num: true}],
+    {k: "avg", label: "Avg per match", num: true},
+    {k: "tr", label: "Tries", num: true}, {k: "pts", label: "Points", num: true}],
 };
 const DEFAULT_SORT = {apps: ["d", "desc"], totals: ["m", "desc"]};
 
@@ -347,13 +354,15 @@ function aggregate(rows) {
     const key = r.k + "|" + r.t + "|" + (r.pos || "");
     let a = map.get(key);
     if (!a) {
-      a = {p: r.p, t: r.t, pos: r.pos, g: r.g, apps: 0, starts: 0, m: 0,
+      a = {p: r.p, t: r.t, pos: r.pos, g: r.g, apps: 0, starts: 0, m: 0, tr: 0, pts: 0,
            approx: false, uncertain: false};
       map.set(key, a);
     }
     if (r.m > 0) a.apps++;
     a.starts += r.st ? 1 : 0;
     a.m += r.m;
+    a.tr += r.tr;
+    a.pts += r.pts;
     a.approx = a.approx || isApprox(r);
     a.uncertain = a.uncertain || r.src === "replaced_ambiguous";
   });
@@ -433,14 +442,16 @@ function appRow(r, maxM) {
     (r.st ? "Start" : '<span class="muted">Bench</span>') + "</td>" +
     minsCell(r.m, maxM, isApprox(r)) +
     '<td class="num">' + (r.on == null ? "" : num1(r.on)) + '</td><td class="num">' +
-    (r.off == null ? "" : num1(r.off)) + "</td><td>" + cards + "</td></tr>";
+    (r.off == null ? "" : num1(r.off)) + '</td><td class="num">' + (r.tr || "") +
+    '</td><td class="num">' + (r.pts || "") + "</td><td>" + cards + "</td></tr>";
 }
 
 function totalsRow(a, maxM) {
   return "<tr><td>" + esc(a.p) + "</td><td>" + esc(a.t) + "</td><td>" + posCell(a) +
     "</td><td>" + esc(a.g || "") + '</td><td class="num">' + int(a.apps) +
     '</td><td class="num">' + int(a.starts) + "</td>" + minsCell(a.m, maxM, a.approx) +
-    '<td class="num">' + num1(a.avg) + "</td></tr>";
+    '<td class="num">' + num1(a.avg) + '</td><td class="num">' + (a.tr || "") +
+    '</td><td class="num">' + (a.pts || "") + "</td></tr>";
 }
 
 function setView(view) {
@@ -481,7 +492,7 @@ function wire() {
     if (!b) return;
     const key = b.dataset.key;
     if (state.sortKey === key) state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
-    else { state.sortKey = key; state.sortDir = ["m", "avg", "apps", "starts", "d"].includes(key) ? "desc" : "asc"; }
+    else { state.sortKey = key; state.sortDir = ["m", "avg", "apps", "starts", "d", "tr", "pts"].includes(key) ? "desc" : "asc"; }
     render();
   };
 }

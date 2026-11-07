@@ -170,7 +170,7 @@ class PositionTests(unittest.TestCase):
         timeline = json.loads(json.dumps(FIXTURE["timeline"]))
         timeline["timeline"] = [
             e for e in timeline["timeline"]
-            if e["playerId"] not in ("2cb691be-52f7-4c69-a685-4984ad9c7255", "65987")]
+            if e.get("playerId") not in ("2cb691be-52f7-4c69-a685-4984ad9c7255", "65987")]
         rows, _ = rm.compute_appearances(FIXTURE["summary"], timeline)
         sato = next(r for r in rows if r["player_name"] == "Kenji Sato")
         self.assertIsNone(sato["position"])
@@ -181,7 +181,7 @@ class PositionTests(unittest.TestCase):
         timeline = json.loads(json.dumps(FIXTURE["timeline"]))
         timeline["timeline"] = [
             e for e in timeline["timeline"]
-            if e["playerId"] not in ("2cb691be-52f7-4c69-a685-4984ad9c7255", "65987")]
+            if e.get("playerId") not in ("2cb691be-52f7-4c69-a685-4984ad9c7255", "65987")]
         timeline["timeline"] += [
             {"type": "Sub On", "typeLabel": "Replacement On", "teamIndex": 0,
              "playerId": "2cb691be-52f7-4c69-a685-4984ad9c7255", "time": {"secs": 3000}},
@@ -228,6 +228,72 @@ class PositionTests(unittest.TestCase):
         cols = {r[1] for r in conn.execute("PRAGMA table_info(appearances)")}
         self.assertTrue({"listed_position", "position_number", "position_group",
                          "position_source"} <= cols)
+
+
+class ScoringTests(unittest.TestCase):
+    def setUp(self):
+        self.rows, self.warnings = rm.compute_appearances(
+            FIXTURE["summary"], FIXTURE["timeline"])
+        self.by_name = {r["player_name"]: r for r in self.rows}
+
+    def test_tries_and_points(self):
+        r = self.by_name["Kazuma Ueda"]
+        self.assertEqual((r["tries"], r["points"]), (2, 10))
+
+    def test_kicker_points(self):
+        r = self.by_name["Isaiah Armstrong-Ravula"]
+        self.assertEqual((r["conversions"], r["penalty_goals"], r["points"]), (3, 2, 12))
+        self.assertEqual(self.by_name["Ryunosuke Ito"]["points"], 8)
+
+    def test_team_points_equal_final_score_including_penalty_try(self):
+        self.assertEqual(self.warnings, [])  # includes the score reconciliation
+        fiji = sum(r["points"] for r in self.rows if r["team"] == "Fiji")
+        self.assertEqual(fiji, 27)  # plus a 7-point penalty try = 34
+
+    def test_mismatch_with_final_score_is_warned(self):
+        timeline = json.loads(json.dumps(FIXTURE["timeline"]))
+        timeline["timeline"] = [e for e in timeline["timeline"]
+                                if not (e.get("typeLabel") == "Try" and e["time"]["secs"] == 600)]
+        _, warnings = rm.compute_appearances(FIXTURE["summary"], timeline)
+        self.assertTrue(any("Japan" in w and "23 points" in w for w in warnings), warnings)
+
+    def test_unmatched_scorer_is_warned_but_team_points_still_count(self):
+        timeline = json.loads(json.dumps(FIXTURE["timeline"]))
+        for e in timeline["timeline"]:
+            if e.get("typeLabel") == "Try" and e["time"]["secs"] == 600:
+                e["playerId"] = "no-such-player"
+        _, warnings = rm.compute_appearances(FIXTURE["summary"], timeline)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("could not be matched", warnings[0])
+
+    def test_missed_conversion_and_hia_labels_are_not_scores(self):
+        for label in ("Missed Conversion", "Replacement On - HIAO Return", "Yellow Card"):
+            self.assertNotIn(rm._classify({"typeLabel": label}), rm.SCORE_POINTS)
+        self.assertEqual(rm._classify({"typeLabel": "Penalty Try"}), "penalty_try")
+        self.assertEqual(rm._classify({"typeLabel": "Penalty"}), "penalty_goal")
+        self.assertEqual(rm._classify({"typeLabel": "Replacement On - HIAO Return"}), "on")
+
+    def test_player_nested_in_event_is_found(self):
+        timeline = json.loads(json.dumps(FIXTURE["timeline"]))
+        for e in timeline["timeline"]:
+            if e.get("typeLabel") == "Try" and e["time"]["secs"] == 600:
+                e["player"] = {"id": e.pop("playerId")}
+        rows, warnings = rm.compute_appearances(FIXTURE["summary"], timeline)
+        self.assertEqual(warnings, [])
+
+    def test_scores_saved_and_old_database_migrated(self):
+        conn = sqlite3.connect(":memory:")
+        conn.executescript(rm.SCHEMA)
+        rm.save_match(conn, FIXTURE["summary"], self.rows, FIXTURE["timeline"])
+        got = conn.execute("SELECT tries, conversions, penalty_goals, points FROM "
+                           "appearances WHERE player_name = 'Isaiah Armstrong-Ravula'").fetchone()
+        self.assertEqual(got, (0, 3, 2, 12))
+        old = sqlite3.connect(":memory:")
+        old.execute("CREATE TABLE appearances (match_id TEXT, player_key TEXT)")
+        rm.migrate(old)
+        cols = {r[1] for r in old.execute("PRAGMA table_info(appearances)")}
+        self.assertTrue({"tries", "conversions", "penalty_goals", "drop_goals",
+                         "points"} <= cols)
 
 
 class BadClockTests(unittest.TestCase):
