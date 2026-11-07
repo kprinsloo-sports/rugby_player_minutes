@@ -45,7 +45,8 @@ SELECT a.match_id, m.match_date, m.team_a, m.team_b, m.competition,
        a.team, a.player_key, a.player_name, a.shirt_number, a.position,
        a.position_number, a.position_group, a.position_source, a.started,
        a.sub_on_minute, a.sub_off_minute, a.minutes_played,
-       a.yellow_cards, a.red_cards, a.tries, a.points
+       a.yellow_cards, a.red_cards, a.tries, a.points,
+       a.conversions, a.penalty_goals
 FROM appearances a JOIN matches m USING (match_id)
 ORDER BY m.match_date DESC, a.match_id, a.team, a.shirt_number
 """
@@ -64,14 +65,14 @@ def load_rows(db_path, national=NATIONAL_TEAMS):
                  "with --refresh (same dates as before) to add them, then try again.")
     out = []
     for (mid, date, ta, tb, comp, est, team, key, name, shirt, pos, slot, group,
-         src, started, on, off, mins, yc, rc, tries, points) in conn.execute(QUERY):
+         src, started, on, off, mins, yc, rc, tries, points, conv, pens) in conn.execute(QUERY):
         out.append({
             "id": mid, "d": date, "ma": f"{ta} v {tb}", "c": comp, "est": est,
             "i": 1 if is_international(ta, tb, national) else 0,
             "t": team, "k": key, "p": name, "sh": shirt, "pos": pos, "n": slot,
             "g": group, "src": src, "st": started, "on": on, "off": off,
             "m": mins or 0, "yc": yc or 0, "rc": rc or 0,
-            "tr": tries or 0, "pts": points or 0,
+            "tr": tries or 0, "pts": points or 0, "cv": conv or 0, "pg": pens or 0,
         })
     return out
 
@@ -178,6 +179,8 @@ th { position: sticky; top: 0; background: var(--surface); z-index: 1;
   font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 th button { all: unset; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
 th.num, td.num { text-align: right; }
+th.sel button { color: var(--accent); }
+th.sel { background: var(--accent-soft); }
 th[aria-sort=ascending] button::after { content: "\25B2"; font-size: 9px; }
 th[aria-sort=descending] button::after { content: "\25BC"; font-size: 9px; }
 tbody tr:hover { background: var(--hover); }
@@ -206,7 +209,7 @@ tbody tr:hover { background: var(--hover); }
     <div class="tile"><div class="v" id="t-matches">0</div><div class="l">Matches</div></div>
     <div class="tile"><div class="v" id="t-players">0</div><div class="l">Players</div></div>
     <div class="tile"><div class="v" id="t-apps">0</div><div class="l">Appearances</div></div>
-    <div class="tile"><div class="v" id="t-mins">0</div><div class="l">Minutes played</div></div>
+    <div class="tile"><div class="v" id="t-mins">0</div><div class="l" id="t-mins-l">Minutes played</div></div>
   </section>
 
   <section class="panel" aria-label="Filters">
@@ -217,6 +220,8 @@ tbody tr:hover { background: var(--hover); }
           <option value="all">All matches</option>
           <option value="other">Non-internationals only</option>
         </select></div>
+      <div class="field"><label for="f-metric">Performance indicator</label>
+        <select id="f-metric"></select></div>
       <div class="field"><label for="f-team">Team</label>
         <select id="f-team"></select></div>
       <div class="field"><label for="f-year">Year</label>
@@ -273,7 +278,19 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g,
 const num1 = n => (Math.round(n * 10) / 10).toLocaleString(undefined, {maximumFractionDigits: 1});
 const int = n => Math.round(n).toLocaleString();
 
-const state = {type: "intl", team: "", year: "", month: "", pos: "", q: "", view: "apps", playedOnly: true,
+// Performance indicators: key in the data rows, label, and (for the tile) a unit.
+const METRICS = [
+  {k: "m", label: "Minutes", tile: "Minutes played"},
+  {k: "tr", label: "Tries", tile: "Tries"},
+  {k: "pts", label: "Points", tile: "Points"},
+  {k: "cv", label: "Conversions", tile: "Conversions"},
+  {k: "pg", label: "Penalty goals", tile: "Penalty goals"},
+  {k: "yc", label: "Yellow cards", tile: "Yellow cards"},
+  {k: "rc", label: "Red cards", tile: "Red cards"},
+];
+const metricOf = k => METRICS.find(m => m.k === k) || METRICS[0];
+
+const state = {metric: "m", type: "intl", team: "", year: "", month: "", pos: "", q: "", view: "apps", playedOnly: true,
   hideUncertain: false, sortKey: "d", sortDir: "desc", page: 0, size: 100};
 
 const COLS = {
@@ -282,16 +299,21 @@ const COLS = {
     {k: "p", label: "Player"}, {k: "pos", label: "Position"}, {k: "g", label: "Group"},
     {k: "st", label: "Role"}, {k: "m", label: "Minutes", num: true},
     {k: "on", label: "On", num: true}, {k: "off", label: "Off", num: true},
-    {k: "tr", label: "Tries", num: true}, {k: "pts", label: "Points", num: true},
+    {k: "tr", label: "Tries", num: true}, {k: "cv", label: "Conv", num: true},
+    {k: "pg", label: "Pens", num: true}, {k: "pts", label: "Points", num: true},
     {k: "cards", label: "Cards"}],
   totals: [
     {k: "p", label: "Player"}, {k: "t", label: "Team"}, {k: "pos", label: "Position"},
     {k: "g", label: "Group"}, {k: "apps", label: "Matches", num: true},
     {k: "starts", label: "Starts", num: true}, {k: "m", label: "Total minutes", num: true},
     {k: "avg", label: "Avg per match", num: true},
-    {k: "tr", label: "Tries", num: true}, {k: "pts", label: "Points", num: true}],
+    {k: "tr", label: "Tries", num: true}, {k: "cv", label: "Conv", num: true},
+    {k: "pg", label: "Pens", num: true}, {k: "pts", label: "Points", num: true},
+    {k: "yc", label: "Yellow", num: true}, {k: "rc", label: "Red", num: true}],
 };
 const DEFAULT_SORT = {apps: ["d", "desc"], totals: ["m", "desc"]};
+// Choosing an indicator other than minutes sorts by it, highest first.
+const defaultSort = view => state.metric !== "m" ? [state.metric, "desc"] : DEFAULT_SORT[view];
 
 function fillSelect(sel, values, allLabel, selected) {
   sel.innerHTML = '<option value="">' + esc(allLabel) + "</option>" +
@@ -310,6 +332,9 @@ function positionOptions() {
 }
 
 function setupFilters() {
+  $("f-metric").innerHTML = METRICS.map(m =>
+    '<option value="' + m.k + '">' + esc(m.label) + "</option>").join("");
+  $("f-metric").value = state.metric;
   const inType = r => state.type === "all" || (state.type === "intl") === !!r.i;
   const teams = [...new Set(DATA.filter(inType).map(r => r.t))].sort();
   fillSelect($("f-team"), teams, "All teams", state.team);
@@ -342,6 +367,7 @@ function filtered() {
     (!state.month || r.d.slice(5, 7) === state.month) &&
     (!state.pos || r.pos === state.pos) &&
     (!state.playedOnly || r.m > 0) &&
+    (state.metric === "m" || r[state.metric] > 0) &&
     (!state.hideUncertain || r.src !== "replaced_ambiguous") &&
     (!q || (r.p || "").toLowerCase().includes(q)));
 }
@@ -354,7 +380,7 @@ function aggregate(rows) {
     const key = r.k + "|" + r.t + "|" + (r.pos || "");
     let a = map.get(key);
     if (!a) {
-      a = {p: r.p, t: r.t, pos: r.pos, g: r.g, apps: 0, starts: 0, m: 0, tr: 0, pts: 0,
+      a = {p: r.p, t: r.t, pos: r.pos, g: r.g, apps: 0, starts: 0, m: 0, tr: 0, pts: 0, cv: 0, pg: 0, yc: 0, rc: 0,
            approx: false, uncertain: false};
       map.set(key, a);
     }
@@ -363,6 +389,10 @@ function aggregate(rows) {
     a.m += r.m;
     a.tr += r.tr;
     a.pts += r.pts;
+    a.cv += r.cv;
+    a.pg += r.pg;
+    a.yc += r.yc;
+    a.rc += r.rc;
     a.approx = a.approx || isApprox(r);
     a.uncertain = a.uncertain || r.src === "replaced_ambiguous";
   });
@@ -399,7 +429,8 @@ function renderHead() {
   $("tbl").tHead.innerHTML = "<tr>" + cols.map(c => {
     const sorted = state.sortKey === c.k;
     const sort = sorted ? (state.sortDir === "asc" ? "ascending" : "descending") : "none";
-    return '<th class="' + (c.num ? "num" : "") + '" aria-sort="' + sort + '">' +
+    const sel = c.k === state.metric ? " sel" : "";
+    return '<th class="' + (c.num ? "num" : "") + sel + '" aria-sort="' + sort + '">' +
       '<button type="button" data-key="' + c.k + '">' + esc(c.label) + "</button></th>";
   }).join("") + "</tr>";
 }
@@ -414,7 +445,8 @@ function render() {
   $("t-matches").textContent = int(new Set(rows.map(r => r.id)).size);
   $("t-players").textContent = int(new Set(rows.map(r => r.k)).size);
   $("t-apps").textContent = int(rows.filter(r => r.m > 0).length);
-  $("t-mins").textContent = int(rows.reduce((s, r) => s + r.m, 0));
+  $("t-mins").textContent = int(rows.reduce((s, r) => s + (r[state.metric] || 0), 0));
+  $("t-mins-l").textContent = metricOf(state.metric).tile;
 
   const size = state.size || data.length || 1;
   const pages = Math.max(1, Math.ceil(data.length / size));
@@ -443,6 +475,7 @@ function appRow(r, maxM) {
     minsCell(r.m, maxM, isApprox(r)) +
     '<td class="num">' + (r.on == null ? "" : num1(r.on)) + '</td><td class="num">' +
     (r.off == null ? "" : num1(r.off)) + '</td><td class="num">' + (r.tr || "") +
+    '</td><td class="num">' + (r.cv || "") + '</td><td class="num">' + (r.pg || "") +
     '</td><td class="num">' + (r.pts || "") + "</td><td>" + cards + "</td></tr>";
 }
 
@@ -451,12 +484,14 @@ function totalsRow(a, maxM) {
     "</td><td>" + esc(a.g || "") + '</td><td class="num">' + int(a.apps) +
     '</td><td class="num">' + int(a.starts) + "</td>" + minsCell(a.m, maxM, a.approx) +
     '<td class="num">' + num1(a.avg) + '</td><td class="num">' + (a.tr || "") +
-    '</td><td class="num">' + (a.pts || "") + "</td></tr>";
+    '</td><td class="num">' + (a.cv || "") + '</td><td class="num">' + (a.pg || "") +
+    '</td><td class="num">' + (a.pts || "") + '</td><td class="num">' + (a.yc || "") +
+    '</td><td class="num">' + (a.rc || "") + "</td></tr>";
 }
 
 function setView(view) {
   state.view = view;
-  [state.sortKey, state.sortDir] = DEFAULT_SORT[view];
+  [state.sortKey, state.sortDir] = defaultSort(view);
   state.page = 0;
   $("v-apps").setAttribute("aria-pressed", view === "apps");
   $("v-totals").setAttribute("aria-pressed", view === "totals");
@@ -464,6 +499,11 @@ function setView(view) {
 }
 
 function wire() {
+  $("f-metric").onchange = e => {
+    state.metric = e.target.value;
+    [state.sortKey, state.sortDir] = defaultSort(state.view);
+    state.page = 0; render();
+  };
   $("f-type").onchange = e => {
     state.type = e.target.value; state.page = 0; setupFilters();
     state.team = $("f-team").value; state.pos = $("f-pos").value; render();
@@ -483,7 +523,7 @@ function wire() {
   $("prev").onclick = () => { state.page--; render(); };
   $("next").onclick = () => { state.page++; render(); };
   $("reset").onclick = () => {
-    Object.assign(state, {type: "intl", team: "", year: "", month: "", pos: "", q: "", playedOnly: true, hideUncertain: false});
+    Object.assign(state, {metric: "m", type: "intl", team: "", year: "", month: "", pos: "", q: "", playedOnly: true, hideUncertain: false});
     $("f-type").value = "intl"; $("f-q").value = ""; $("f-played").checked = true; $("f-uncertain").checked = false;
     setupFilters(); setView(state.view);
   };
@@ -492,7 +532,7 @@ function wire() {
     if (!b) return;
     const key = b.dataset.key;
     if (state.sortKey === key) state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
-    else { state.sortKey = key; state.sortDir = ["m", "avg", "apps", "starts", "d", "tr", "pts"].includes(key) ? "desc" : "asc"; }
+    else { state.sortKey = key; state.sortDir = ["m", "avg", "apps", "starts", "d", "tr", "pts", "cv", "pg", "yc", "rc"].includes(key) ? "desc" : "asc"; }
     render();
   };
 }
